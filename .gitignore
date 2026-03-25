@@ -95,3 +95,6 @@ coverage/
 
 *.tmp
 *.swp
+
+target/
+*.jar
