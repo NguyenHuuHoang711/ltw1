@@ -19,7 +19,7 @@ public class CourseRegistrationRequest {
     private UUID registrationPeriodId;
 
     @Range(min = 1, max = 3, message = "Loại đăng ký không hợp lệ (1: Mới, 2: Lại, 3: Cải thiện)")
-    private Integer registrationType;
+    private Byte registrationType;
 
     private UUID replacedGradeId;
 }

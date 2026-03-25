@@ -2,6 +2,7 @@ package com.example.demo.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,12 +31,13 @@ public class CourseRegistration extends BaseEntity {
     @JoinColumn(name = "registration_period_id")
     private RegistrationPeriod registrationPeriod;
 
-    private Integer registrationType;
+    private Byte registrationType;
     private UUID replacedGradeId;
     private LocalDateTime registeredAt;
     private Integer status;
     private Boolean isPaid;
 
     @Version // Xử lý Optimistic Locking cho row_version
-    private Long rowVersion;
+    @Column(name = "row_version", columnDefinition = "rowversion")
+    private byte[] rowVersion;
 }
