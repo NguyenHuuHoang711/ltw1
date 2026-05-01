@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.modules.registration.dto;
 import java.util.UUID;
 
 import org.hibernate.validator.constraints.Range;

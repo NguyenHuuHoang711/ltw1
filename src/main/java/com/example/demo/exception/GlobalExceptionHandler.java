@@ -1,76 +1,58 @@
 package com.example.demo.exception;
 
-import java.time.LocalDateTime;
-import java.util.stream.Collectors; // Thêm Logging từ Lombok
-
+import com.example.demo.modules.registration.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException; // Để bắt lỗi @Valid
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import com.example.demo.dto.ErrorResponse;
+import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j // Tự động tạo đối tượng 'log'
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Bắt lỗi Resource không tìm thấy
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-        log.warn("Resource không tồn tại: {}", ex.getMessage()); // Log mức cảnh báo
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                ex.getMessage(),
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(NotFoundException ex, WebRequest request) {
+        ApiResponse<Object> response = new ApiResponse<>(false, null, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // 2. Bắt lỗi Validation (Khi dùng @Valid ở Controller)
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConflictException(ConflictException ex, WebRequest request) {
+        ApiResponse<Object> response = new ApiResponse<>(false, null, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException ex, WebRequest request) {
+        ApiResponse<Object> response = new ApiResponse<>(false, null, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // Gom tất cả các lỗi field thành 1 chuỗi tin nhắn
-        String errorMessage = ex.getBindingResult().getFieldErrors()
-                .stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
-                .collect(Collectors.joining("; "));
-
-        log.warn("Dữ liệu đầu vào không hợp lệ: {}", errorMessage);
-        
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                errorMessage,
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        ApiResponse<Object> response = new ApiResponse<>(false, null, errorMessage);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // 3. Bắt lỗi tham số không hợp lệ chung
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(IllegalArgumentException ex) {
-        log.error("Tham số không hợp lệ: ", ex);
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    // Let Spring handle NoResourceFoundException (404 for static resources like swagger-ui)
+    // instead of catching it as a generic 500 error.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Object> handleNoResourceFoundException(NoResourceFoundException ex) throws Exception {
+        throw ex; // Re-throw to let Spring MVC handle it naturally
     }
 
-    // 4. Bắt tất cả các lỗi còn lại (Lỗi Runtime, DB, v.v.)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        // Ghi StackTrace đầy đủ ra file log để debug
-        log.error("Lỗi hệ thống nghiêm trọng: ", ex); 
-
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Đã có lỗi hệ thống xảy ra. Vui lòng kiểm tra lại log hoặc liên hệ admin.",
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex, WebRequest request) {
+        // Print stack trace to console to help debug any further 500 errors
+        ex.printStackTrace();
+        ApiResponse<Object> response = new ApiResponse<>(false, null, "An unexpected error occurred: " + ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

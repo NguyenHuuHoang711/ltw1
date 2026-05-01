@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Registration - Login</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 350px; }
+        h1 { text-align: center; color: #333; }
+        label { display: block; margin-top: 1rem; }
+        input, select, button { width: 100%; padding: 0.8rem; margin-top: 0.5rem; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 1rem; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login Simulation</h1>
+        <form id="loginForm">
+            <div>
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" value="88888888-8888-8888-8888-888888888888" required>
+            </div>
+            <div>
+                <label for="role">Role:</label>
+                <select id="role">
+                    <option value="student">Student</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit">Enter System</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const role = document.getElementById('role').value;
+
+            // Store user info in localStorage to be used by other pages
+            localStorage.setItem('fake_user_id', userId);
+            localStorage.setItem('fake_user_role', role);
+
+            // Redirect based on role
+            if (role === 'student') {
+                window.location.href = '/student';
+            } else {
+                window.location.href = '/admin';
+            }
+        });
+    </script>
+</body>
+</html>
